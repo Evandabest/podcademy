@@ -1,8 +1,7 @@
-"use client"
-
-import React, { useState } from 'react';
-import Dropzone from '@/components/Dropzone';
-import FileList from '@/components/FileList';
+"use client";
+import React, { useState } from "react";
+import Dropzone from "@/components/Dropzone";
+import FileList from "@/components/FileList";
 
 interface UploadedFile {
   filename: string;
@@ -12,19 +11,19 @@ interface UploadedFile {
 const App: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleDrop = (acceptedFiles: File[]) => {
     setUploading(true);
-    setError('');
+    setError("");
 
     const formData = new FormData();
     acceptedFiles.forEach((file) => {
-      formData.append('files', file);
+      formData.append("files", file);
     });
 
-    fetch('http://127.0.0.1:5000/upload', {
-      method: 'POST',
+    fetch("http://127.0.0.1:5000/upload", {
+      method: "POST",
       body: formData,
     })
       .then(async (response) => {
@@ -33,12 +32,12 @@ const App: React.FC = () => {
           setUploadedFiles(data.files);
         } else {
           const errorData = await response.json();
-          setError(errorData.error || 'Error uploading files');
+          setError(errorData.error || "Error uploading files");
         }
       })
       .catch((err) => {
-        console.error('Error:', err);
-        setError('Error uploading files');
+        console.error("Error:", err);
+        setError("Error uploading files");
       })
       .finally(() => {
         setUploading(false);
@@ -46,11 +45,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className='container max-w-2xl p-4 mx-auto'>
-      <h1 className='mb-4 text-2xl font-bold'>Upload Files to Amazon S3</h1>
+    <div className="container max-w-2xl p-4 mx-auto">
+      <h1 className="mb-4 text-2xl font-bold">Upload Files to Amazon S3</h1>
       <Dropzone onDrop={handleDrop} />
-      {uploading && <p className='mt-4 text-blue-600'>Uploading files...</p>}
-      {error && <p className='mt-4 text-red-600'>{error}</p>}
+      {uploading && <p className="mt-4 text-blue-600">Uploading files...</p>}
+      {error && <p className="mt-4 text-red-600">{error}</p>}
       {uploadedFiles.length > 0 && <FileList files={uploadedFiles} />}
     </div>
   );
