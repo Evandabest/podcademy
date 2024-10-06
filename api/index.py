@@ -7,10 +7,11 @@ from dotenv import load_dotenv
 import uuid
 import datetime
 from flask_cors import CORS
-import PyPDF2 
+import PyPDF2
 import google.generativeai as genai
 from supabase import create_client, Client
-
+from elevenlabs import VoiceSettings
+from elevenlabs.client import ElevenLabs
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -30,7 +31,6 @@ S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
 print(AWS_REGION)
 
-
 # Configure boto3 client
 s3_client = boto3.client(
     's3',
@@ -39,59 +39,14 @@ s3_client = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf',
-                      'txt', 'zip', 'docx, mp3'}  # edit this to include mp4 mp3 etc
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'txt', 'zip', 'docx', 'mp3'}  # Fixed typo
 MAX_CONTENT_LENGTH = 2 * 1024 * 1024 * 1024  # 2 GB limit
 
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
-
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-#@app.route('/api/upload', methods=['POST'])
-#def upload():
-#    files = request.files.getlist('files')
-#    if not files:
-#        return jsonify({'error': 'No files provided'}), 400
-#
-#    uploaded_files_info = []
-#    for file in files:
-#        if file.filename == '':
-#            continue  # Skip files with no filename
-#        if allowed_file(file.filename):
-#            unique_filename = str(uuid.uuid4())
-#            date_prefix = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-#            s3_key = f"{date_prefix}_{unique_filename}"
-#            try:
-#                s3_client.upload_fileobj(
-#                    file,
-#                    S3_BUCKET_NAME,
-#                    s3_key,
-#                    ExtraArgs={'ACL': 'private'}
-#                )
-#                # Generate the S3 file URL
-#                file_url = s3_client.generate_presigned_url(
-#                    'get_object',
-#                    Params={'Bucket': S3_BUCKET_NAME, 'Key': s3_key},
-#                )
-#                uploaded_files_info.append(
-#                    {'filename': file.filename, 'url': file_url})
-#            except Exception as e:
-#                print(e)
-#                return jsonify({'error': 'Error uploading file'}), 500
-#        else:
-#            return jsonify({'error': f'File type not allowed: {file.filename}'}), 400
-#
-#    if uploaded_files_info:
-#        return jsonify({'files': uploaded_files_info}), 200
-#    else:
-#        return jsonify({'error': 'No files uploaded'}), 400
-
-from elevenlabs import VoiceSettings
-from elevenlabs.client import ElevenLabs
 
 voices = {
     "female1": "LcfcDJNUP1GQjkzn1xUU",
@@ -104,7 +59,6 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 client = ElevenLabs(
     api_key=ELEVENLABS_API_KEY,
 )
-
 
 def text_to_speech_file(text: str) -> str:
     # Calling the text_to_speech conversion API with detailed parameters
@@ -147,10 +101,10 @@ def upload(id):
             s3_key = f"{date_prefix}_{unique_filename}"
             try:
                 # Extract text from PDF
-                pdf_reader = PyPDF2.PdfFileReader(file)
+                pdf_reader = PyPDF2.PdfReader(file)  # Use PdfReader instead of PdfFileReader
                 text = ""
-                for page_num in range(pdf_reader.numPages):
-                    page = pdf_reader.getPage(page_num)
+                for page_num in range(len(pdf_reader.pages)):
+                    page = pdf_reader.pages[page_num]
                     text += page.extract_text()
                 extracted_texts.append({'filename': file.filename, 'text': text})
 
@@ -181,11 +135,11 @@ def upload(id):
         try:
             prompt = "Make a 5 minute podcast episode about the following text: "
             for text in extracted_texts:
-                prompt += text["filename"] + ":" + text['text']
+                prompt += text["filename"] + ": " + text['text']
             speak = parse_and_summarize(prompt)
             file = text_to_speech_file(speak)
-            name = parse_and_summarize("Generate a name for this podcast episode" + prompt[56:])
-            #upload this file to s3
+            name = parse_and_summarize("Generate a name for this podcast episode: " + prompt[56:])
+            # Upload this file to S3
             unique_filename = str(uuid.uuid4())
             date_prefix = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
             s3_key = f"{date_prefix}_{unique_filename}.mp3"
@@ -200,7 +154,6 @@ def upload(id):
                 'get_object',
                 Params={'Bucket': S3_BUCKET_NAME, 'Key': s3_key},
             )
-            
 
             # Insert the file URLs into the database
             documents = []
@@ -208,17 +161,13 @@ def upload(id):
                 documents.append(str(uploaded_file_info['url']))
 
             uid = str(uuid.uuid4())
-            
-            response = supabase.from_table("podcasts").insert([{"id": uid, "owner": id, "name": name, "documents": json.dumps(documents), "audio": audio_file_url}])
-    
+
+            response = supabase.table("podcasts").insert([{"id": uid, "owner": id, "name": name, "documents": json.dumps(documents), "audio": audio_file_url}])
+
         except Exception as e:
             print(e)
             return jsonify({'error': 'Error parsing and summarizing text'}), 500
 
-            
-        except Exception as e:
-            print(e)
-            return jsonify({'error': 'Error parsing and summarizing text'}), 500
         return jsonify({'files': uploaded_files_info, 'texts': extracted_texts}), 200
     else:
         return jsonify({'error': 'No files uploaded'}), 400
