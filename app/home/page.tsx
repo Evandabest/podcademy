@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useRef, use } from "react";
-import Header from "../../components/Header";
 import ChooseFiles from "../../components/ChooseFiles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload } from "@fortawesome/free-solid-svg-icons";
@@ -10,9 +9,10 @@ export default function Home() {
   const [files, setFiles] = useState<any>([]);
   const [uploadedFiles, setUploadedFiles] = useState<any>([]);
   const hiddenFileInput = useRef(null);
-  const [file, setFile] = useState(null);
   const [id, setId] = useState<string | null>(null);
   const supabase = createClient();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleUploadClick = (event: any) => {
     hiddenFileInput.current.click();
@@ -31,8 +31,42 @@ export default function Home() {
 
   };
 
+  const handleDrop = (acceptedFiles: File[]) => {
+    setUploading(true);
+    setError("");
+
+    const fileSet = new Set(files.map((file: File) => file.name));
+    const intersectedFiles = acceptedFiles.filter(file => fileSet.has(file.name));
+
+    const formData = new FormData();
+    acceptedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    fetch(`/api/upload/${id}`, {
+      method: "POST",
+      body: formData,
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          const data = await response.json();
+          setUploadedFiles(data.files);
+        } else {
+          const errorData = await response.json();
+          setError(errorData.error || "Error uploading files");
+        }
+      })
+      .catch((err) => {
+        console.error("Error:", err);
+        setError("Error uploading files");
+      })
+      .finally(() => {
+        setUploading(false);
+      });
+  };
+
   const handleGenerate = () => {
-    console.log("Generating...");
+    handleDrop(files);
   }
 
   useEffect(() => {
@@ -41,7 +75,7 @@ export default function Home() {
       const id = user?.id ?? null;
       setId(id);
     }
-
+    getUser();
   }, []);
 
   return (
@@ -78,6 +112,8 @@ export default function Home() {
         <button className="bg-gray-300 m-auto mt-4 hover:bg-gray-400 rounded-3xl p-8 w-[40%]" onClick={handleGenerate}>
             Generate
           </button>
+        {uploading && <p className="mt-4 text-blue-600">Uploading files...</p>}
+        {error && <p className="mt-4 text-red-600">{error}</p>}
       </div>
     </div>
   );
