@@ -12,7 +12,6 @@ interface HeaderProps {
   showMyPods?: boolean;
   showUpload?: boolean;
   showSignup?: boolean;
-  handleUpload?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -20,22 +19,20 @@ const Header: React.FC<HeaderProps> = ({
   showMyPods,
   showUpload,
   showSignup,
-  handleUpload,
 }) => {
-  const handleOpenSidebar = () => {};
   return (
-    <div className="flex justify-between items-center p-4">
+    <div className="flex justify-between items-center p-4 m-4">
       <div className="flex items-center">
         <div className="flex items-center">
           {showBars && (
-            <button onClick={handleOpenSidebar}>
+            <button>
               <FontAwesomeIcon
                 icon={faBars}
                 className="h-[30px] w-[30px] mr-4"
               />
             </button>
           )}
-          <Link href="/">
+          <Link href="/home">
             <h1 className="font-bold text-3xl hover:text-gray-600">
               podcademy
             </h1>
@@ -63,14 +60,14 @@ const Header: React.FC<HeaderProps> = ({
             my pods
           </Link>
         )}
-        {showUpload && handleUpload && (
+        {showUpload && (
           <div className="flex items-center">
-            <button onClick={handleUpload}>
+            <Link href="/upload">
               <FontAwesomeIcon
                 icon={faCirclePlus}
                 className="h-[30px] w-[30px] hover:text-gray-600"
               />
-            </button>
+            </Link>
           </div>
         )}
       </div>
