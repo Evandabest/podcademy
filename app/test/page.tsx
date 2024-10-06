@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react';
 import Dropzone from '@/components/Dropzone';
 import FileList from '@/components/FileList';
