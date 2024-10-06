@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import Header from "../../components/Header";
 import ChooseFiles from "../../components/ChooseFiles";
 import clsx from "clsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
 const UploadPage = () => {
   const [files, setFiles] = useState<any>([]);
@@ -64,12 +66,19 @@ const UploadPage = () => {
                 <button
                   key={idx}
                   onClick={() => handleCustomize(idx)}
-                  className={clsx("rounded-3xl px-2 py-1", {
-                    "hover:bg-gray-400": !voice.isClicked,
-                    "bg-gray-400": voice.isClicked,
-                  })}
+                  className={clsx(
+                    "rounded-3xl flex items-center justify-between px-2",
+                    {
+                      "hover:bg-gray-400": !voice.isClicked,
+                      "bg-gray-400": voice.isClicked,
+                    }
+                  )}
                 >
                   {voice.name}
+                  <FontAwesomeIcon
+                    icon={faPlay}
+                    className="h-[18px] w-[18px]"
+                  />
                 </button>
               ))}
             </div>
