@@ -21,6 +21,7 @@ S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
 print(AWS_REGION)
 
+
 # Configure boto3 client
 s3_client = boto3.client(
     's3',
