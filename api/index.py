@@ -31,7 +31,7 @@ s3_client = boto3.client(
 )
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf',
-                      'txt', 'zip', 'docx'}  # edit this to include mp4 mp3 etc
+                      'txt', 'zip', 'docx, mp3'}  # edit this to include mp4 mp3 etc
 MAX_CONTENT_LENGTH = 2 * 1024 * 1024 * 1024  # 2 GB limit
 
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH

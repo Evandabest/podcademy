@@ -6,6 +6,7 @@ import {
   faCirclePlus,
   faBars,
 } from "@fortawesome/free-solid-svg-icons";
+import Sidebar from "./sidebar";
 
 interface HeaderProps {
   showBars?: boolean;
@@ -21,9 +22,10 @@ const Header: React.FC<HeaderProps> = ({
   showSignup,
 }) => {
   return (
-    <div className="flex justify-between items-center p-4 m-4">
-      <div className="flex items-center">
-        <div className="flex items-center">
+    <div className="flex items-center justify-between p-4 m-4">
+      <div className="flex items-center justify-center">
+        <Sidebar />
+        <div className="flex items-center justify-center">
           {showBars && (
             <button>
               <FontAwesomeIcon
@@ -33,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           )}
           <Link href="/home">
-            <h1 className="font-bold text-3xl hover:text-gray-600">
+            <h1 className="text-3xl font-bold hover:text-gray-600">
               podcademy
             </h1>
           </Link>
@@ -43,7 +45,7 @@ const Header: React.FC<HeaderProps> = ({
           className="h-[30px] w-[30px] ml-4"
         />
       </div>
-      <div className="flex gap-4 items-center">
+      <div className="flex items-center gap-4">
         {showSignup && (
           <Link
             href="/sign-up"
@@ -55,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({
         {showMyPods && (
           <Link
             className="text-xl underline hover:text-gray-600"
-            href="/my-pods"
+            href="/pod"
           >
             my pods
           </Link>
